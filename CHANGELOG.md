@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — reliability review (2026-11-22)
+
+- Clarified platform facts versus house/project conventions and verification evidence.
+- Added domain-specific reliability guidance, source provenance and acceptance cases.
+- Added review/template checks and corrected over-broad or inconsistent claims.
+- Extended repository consistency checks to the new reliability rule IDs and aligned contributor guidance with the full checkout.
+
+
 All notable changes to this skill. Rule IDs are stable: new rules get new numbers, retired rules are never reused.
 
 ## 1.2.0 — 2026-11-22

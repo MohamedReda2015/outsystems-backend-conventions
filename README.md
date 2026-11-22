@@ -158,7 +158,8 @@ git archive --format=zip --prefix=outsystems-backend-conventions/ -o outsystems-
 ## Contributing
 Rule proposals, corrections and real-world lessons are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md): cite a source, label what you couldn't verify, paraphrase, include no confidential data, keep rule IDs stable, and run the checks:
 ```bash
-node scripts/check_skill.mjs && node scripts/test.mjs
+node scripts/check-backend.mjs scripts/examples/inventory-good.json --json
+node scripts/lint-sql.mjs scripts/examples/sql-good --json
 ```
 Also see the [Code of Conduct](CODE_OF_CONDUCT.md) and the [Security policy](SECURITY.md).
 
@@ -167,3 +168,17 @@ This is an independent community project. It is **not affiliated with, endorsed 
 
 ## License
 [MIT](LICENSE).
+
+
+## Reliability review (Unreleased)
+
+The updated guidance separates installed platform behavior, house conventions and observed project lessons. Read [verification and reliability](references/verification-and-reliability.md) for domain acceptance checks and primary sources. Changes are recorded under Unreleased; this does not declare a new upstream release.
+
+Repository maintenance checks (full Git checkout):
+
+```sh
+node scripts/check_skill.mjs
+node scripts/test.mjs
+```
+
+These maintenance scripts are excluded from the release archive.

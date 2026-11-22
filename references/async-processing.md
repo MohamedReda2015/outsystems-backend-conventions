@@ -50,7 +50,7 @@ Facts and rules:
 
 ## 3. Per-record processing (`BAS-02`)
 - Each work item has: `Status` (Pending, Processing, Done, Failed, DeadLetter), `Attempts`, `NextAttemptOn`, `LastError` (masked), `ProcessedOn`.
-- Wrap each record in its own exception handler (Abort Transaction = No, so earlier records survive): catch → log → mark the record `Failed` (Attempts+1, NextAttemptOn with backoff) → continue.
+- Choose the per-record transaction boundary before handling failure. A non-aborting handler is safe only when retaining all prior writes in that transaction is intended; otherwise partial writes for the failed item would commit. Commit completed items, abort the failed item’s unit, then persist failure state separately as described below.
 - If a failed record's partial writes must be undone, give each record (or small group) its own transaction: `CommitTransaction` after each success, and on failure call `AbortTransaction` (rolls back only that record's work), then mark it `Failed` and commit that status.
 - After max attempts → `DeadLetter`, visible in the back office with a manual retry.
 - Pick items with a status filter and `NextAttemptOn <= Now`; claim them (`Processing`, with `ClaimedOn`) and commit before slow work when several timers or front-ends may pick the same rows.
@@ -68,9 +68,9 @@ See integrations.md §8. Summary: write the intention in the business transactio
   - it starts **only on entity Create**: the entity needs **Expose Process Events**, the process's `Launch On` is that entity's Create, and light execution must be enabled for the module in Service Center. Updates, deletes and manual launches don't trigger it — a manual `Launch` runs as a regular BPT process;
   - it uses its own thread pool (reported defaults per front-end: 20 Light BPT, 10 BPT, 3 timer threads — check your version), and its activity timeout is short (reported ~3 minutes vs 5 for BPT automatic activities): keep the activity small and idempotent;
   - processing order isn't guaranteed: don't depend on it;
-  - commit before the insert's data is needed by the activity (`BTX-07`).
+  - verify event/commit visibility (`BTX-07`); enqueue the durable intent with the business write where supported and recover any required commit-before-dispatch gap.
 - ODC has no BPT or Light BPT: use **events** (with the limits in business-logic.md §11, `BAS-09`) and **workflows**.
-- Process versions: changing a process definition affects new instances; plan migrations for running instances.
+- Process versions: publishing can upgrade running O11 process instances. Inspect impact analysis and test live-instance compatibility; do not assume a change affects new instances only.
 - Terminate or close instances explicitly; purge old process data per retention.
 
 ## 6. Operations (`BAS-04`)

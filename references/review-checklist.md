@@ -41,7 +41,7 @@ Every rule has an ID, a severity and a check. Cite the ID in findings. IDs are s
 | BTX-04 | Major | Concurrency handled: optimistic check for user edits; `Get…ForUpdate` for counters, sequences, balances; unique indexes for "only one" rules |
 | BTX-05 | Major | Retryable operations are idempotent (timers, BPT, Service Actions after CommunicationException, APIs, double submit) |
 | BTX-06 | Major | No external calls while holding locks or inside the business transaction; use after-commit or outbox |
-| BTX-07 | Major | Commit before launching a process, calling a consumed service, or triggering an ODC event that must read data written in the same request (Read Committed databases: Oracle, PostgreSQL; ODC) |
+| BTX-07 | Major | Verify committed-data visibility and installed trigger semantics before handoff; document required commits and recovery instead of blanket early commits |
 
 ## BDA — Data access (data-access.md)
 | ID | Sev | Rule |
@@ -143,3 +143,15 @@ Every rule has an ID, a severity and a check. Cite the ID in findings. IDs are s
 4. Sample by element type: CS entities + CRUD, BL public actions and their `_Logic`, Structures, transitions, SQL nodes, IS actions, exposed API methods, timers, site properties.
 5. For each client-reachable action, ask the security questions in security.md §9.
 6. Record each finding: ID · severity · `Module.Folder.Element` · evidence · fix. Order: Security → Data integrity (BTX, BDA) → Performance → Architecture → Maintainability. Use `templates/backend-review-report.md`.
+
+
+## Reliability and evidence (2026-11 review)
+
+These manual checks complement, rather than extend the claimed coverage of, the static scripts. Details and acceptance cases: [verification and reliability](verification-and-reliability.md).
+
+| ID | Severity | Rule |
+|---|---|---|
+| BRV-01 | Major | Compare versions and perform writes atomically; protect uniqueness at the database boundary. |
+| BRV-02 | Major | Scope idempotency keys and recover ambiguous outcomes/outbox delivery without claiming exactly once. |
+| BRV-03 | Major | Map durable boundaries and rollback semantics; a failure result alone does not undo writes. |
+| BRV-04 | Major | Verify tenant/record authorization, temporal IDs, deterministic paging and safe dynamic SQL. |

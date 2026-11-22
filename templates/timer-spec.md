@@ -24,3 +24,13 @@
 
 ## Verification
 - [ ] Empty run · [ ] normal run · [ ] run longer than the logical timeout re-wakes and resumes · [ ] a failing record doesn't stop the batch · [ ] rerun after failure doesn't duplicate work · [ ] kill switch stops it
+
+
+## Evidence and acceptance
+
+- Platform/app type, installed versions/theme where relevant, target environment:
+- Existing project decisions and authorized delivery scope:
+- Requirement → element/contract → source of data → verification evidence:
+- Concurrency, retry/unknown outcome, authorization and failure cases relevant to this change:
+- Delivery status: prepared / model validated / merged / published / runtime verified (record only observed stages):
+- Not tested, missing dependency or blocked evidence, and the exact next step:

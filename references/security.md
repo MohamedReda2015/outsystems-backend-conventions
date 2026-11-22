@@ -27,7 +27,7 @@ Each BL entry point reachable from a client, another app or an API checks, on th
 
 ## 3. Identity (`BSC-02`, `SEC-09`)
 - `GetUserId()` is called **inside** server logic. Never a `UserId`, `CurrentUserId`, `TenantId`, `IsAdmin`, `Role` or `ActorId` input on a client- or API-reachable action.
-- Timers and processes have no user. Use an explicit system actor for audit columns. If they call BL actions that check roles, either call the private `_Logic` directly (the timer is trusted code), or log in a dedicated **service account** with only the roles it needs (credentials in secret configuration) — never remove the role check from the public action to make a timer work.
+- Timers and processes have no user. Use an explicit system actor for audit columns. If they call BL actions that check roles, use a same-module private `_Logic` entry or a deliberately restricted background contract with explicit tenant/system context and current-state checks; prefer this to creating a synthetic interactive login — never remove the role check from the public action to make a timer work.
 - External users without a platform user: resolve the actor from the authenticated session/token on the server (e.g. `IDP:<externalId>`), never from a parameter; compare it with the record's owner on every call.
 
 ## 4. Inputs (`BSC-04`, `SEC-02`, `SEC-08`)

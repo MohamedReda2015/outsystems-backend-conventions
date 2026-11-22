@@ -71,7 +71,7 @@ const archPerf = new Set([1, 4, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]);
 for (const [p, [a, b]] of Object.entries(ARCH)) for (let i = a; i <= b; i++) known.add(`${p}-${String(i).padStart(2, "0")}`);
 for (const i of archPerf) known.add(`PERF-${String(i).padStart(2, "0")}`);
 
-const idRe = /\b(BNM|BLG|BTX|BDA|BIN|BER|BAS|BPF|BSC|BCF|BLL|ARC|HSE|DAT|INT|UI|PERF|SEC|AUD|MNT|OPS|TST)-(\d+)\b/g;
+const idRe = /\b(BNM|BLG|BTX|BDA|BIN|BER|BAS|BPF|BSC|BCF|BRV|BLL|ARC|HSE|DAT|INT|UI|PERF|SEC|AUD|MNT|OPS|TST)-(\d+)\b/g;
 for (const f of files.filter((x) => /\.(md|mdc|mjs|json)$/.test(x) && !x.startsWith(".github/") && x !== "scripts/check_skill.mjs")) {
   for (const m of read(f).matchAll(idRe)) {
     if (!known.has(m[0])) errors.push(`${f}: cites undefined rule ${m[0]}`);

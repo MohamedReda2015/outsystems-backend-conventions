@@ -72,7 +72,7 @@ Rules:
 
 ## 5. Transactions (`BTX-01` … `BTX-03`, `BTX-06`)
 Platform behaviour:
-- A server request (screen/server action call, Service Action call, timer run, API method) is **one database transaction** that commits when the request ends successfully.
+- A server request starts transactions on database access and normally commits on successful completion. Separate Service Actions, explicit commits and external connections break a single atomic unit; database isolation also affects read connections.
 - An exception handler with **Abort Transaction = Yes** rolls back; an unhandled exception rolls back too.
 - `CommitTransaction` commits what's done so far; `AbortTransaction` rolls back. Both start a new transaction. Transactions can't be nested; commit or rollback releases all locks.
 - There is **no distributed transaction**: other database catalogs, external databases and integrations commit independently.
@@ -82,20 +82,20 @@ House rules:
 - **BTX-01** Multi-step writes live in **one** private Server Action behind one public entry point. If a flow must span several Service Actions (different apps), design **compensation** (e.g. `Payment_Refund` for `Payment_Capture`) and record which step completed.
 - **BTX-02** `CommitTransaction` only in timers, batch jobs and long processes (per batch), never in BL use-case actions or CRUD wrappers. A public action that commits or aborts ends its description with `[commit transaction]` / `[abort transaction]` (`DAT-12`).
 - **BTX-03** Handlers in write flows keep Abort Transaction = Yes. If you need a **failure record** to survive the rollback, write it to the platform log (`LogMessage`/`LogError`, not rolled back) or call the logging action after `AbortTransaction`. A row written to your own entity before the rollback is lost with it.
-- **BTX-07** Commit **before** handing work to something that reads your data in another transaction: launching a BPT process, calling a consumed web service that calls back, triggering an ODC event, waking a timer that processes the new rows. Otherwise, on Read Committed databases and in ODC, the other side doesn't see the rows yet (or waits on your locks). Required by the docs for processes and web services on Oracle/PostgreSQL; do it everywhere so code is portable.
+- **BTX-07** Verify the handoff boundary: a receiver in another transaction may require committed data (the official transaction guidance calls this out for processes/web services on Read Committed databases). Identify the installed API’s trigger/visibility behavior. Keep business writes and durable dispatch intent together where supported; if a commit before dispatch is required, document partial-success recovery. Do not commit every use case early for assumed portability. See `verification-and-reliability.md`.
 - **BTX-06** No external call (REST, SOAP, email, SMS, file store) while the transaction holds row locks or after a `Get…ForUpdate`. Commit first, or write an **outbox** row in the same transaction and let a timer send it (async-processing.md §4). Otherwise: long locks, and an external side effect that a rollback can't undo.
 
 ## 6. Concurrency (`BTX-04`)
 | Situation | Pattern |
 |---|---|
-| Two users edit the same record | **Optimistic**: the client gets `UpdatedOn` (or a `Version` integer) with the record and sends it back; `_Logic` compares with the stored value and returns `ActionResult` code `CONCURRENT_UPDATE` if different. |
+| Two users edit the same record | **Optimistic**: return a `Version` token; update only if the stored version still matches, then increment it atomically. Use a conditional update and inspect affected rows, or lock with `Get<Entity>ForUpdate` before comparison and keep the lock through the write. Return `CONCURRENT_UPDATE` on mismatch. An unlocked read followed by an update is insufficient; timestamps require verified precision. |
 | Sequence numbers, counters, balances, stock, quota | **Pessimistic**: `Get<Entity>ForUpdate(Id)` locks the row until the transaction ends. Keep the window short; no external calls inside it. |
 | "Only one may exist" (one open request per customer) | **Unique index** + catch the database exception → `ConflictException` / `ActionResult` code. Never only "check then insert". |
 | Status transition races (approve vs cancel) | Conditional update: re-read with `ForUpdate`, check the current status, then update. |
 | Reference numbers (`REQ-2026-000123`) | A `Sequence` entity per prefix/year, incremented with `GetSequenceForUpdate` in the same transaction as the insert. Never `MAX(Id)+1`. |
 | Serialize a whole operation (one import per customer at a time) | **Semaphore entity**: one row per key; `Get…ForUpdate` on it at the start; other requests wait. Protects only code that follows the convention. |
 
-`Get<Entity>ForUpdate` facts: it is the only locking primitive the platform gives; it locks **one row** for update/delete (others can still read it); the lock lasts until the **transaction** ends (end of request, or `CommitTransaction`). It can't hold a record while a user is editing a screen — that's what the optimistic check is for. Duplicate rows from concurrent API calls are stopped by a unique index, not by checking first.
+`Get<Entity>ForUpdate` facts: it is the generated entity action for locking an existing row; it locks **one row** for update/delete (others can still read it); the lock lasts until the **transaction** ends (end of request, or `CommitTransaction`). It can't hold a record while a user is editing a screen — that's what the optimistic check is for. Duplicate rows from concurrent API calls are stopped by a unique index, not by checking first.
 
 ## 7. Idempotency (`BTX-05`)
 Anything that may run twice must produce the same result:
@@ -135,7 +135,7 @@ ODC has no modules: the units are **apps** (Web, Mobile, Workflow, Agentic) and 
 | Site properties | **Settings** per stage, read-only at runtime, changed only in the Portal; **secret** settings for credentials |
 | Extensions (C#) | **External libraries** (C# SDK), with their own execution and payload limits |
 | BPT / Light BPT | **Workflows** for human processes; **events** for event-driven async work; **timers** |
-| DB isolation varies | Read committed: commit before triggering an event that reads your data (`BTX-07`) |
+| DB isolation varies | Read committed: commit same-transaction data before triggering an ODC event that reads it; recover failures after commit (`BTX-07`) |
 
 Rules:
 - Every cross-app call is remote: Service Action rules (own transaction, idempotency, small payloads, compensation, `CommunicationException`) apply to all of them. Prefer structures over entities in their signatures.

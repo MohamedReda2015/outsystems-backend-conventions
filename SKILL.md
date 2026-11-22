@@ -1,16 +1,27 @@
 ---
 name: outsystems-backend-conventions
-description: OutSystems backend conventions for O11 and ODC on the 3-layer Architecture Canvas. Covers naming and folders for server elements; BL logic (thin Service Actions, private _Logic, use-case writes, validation, state transitions, ActionResult); Service vs Server Actions, transactions, concurrency, idempotency; database work (read-only entities, CRUD wrappers, aggregates, SQL, soft delete, bulk, retention); integrations (_IS wrappers, consumed/exposed REST, timeouts, retries, outbox); errors and logging; timers, BPT, async; performance, caching, server security, configuration. Includes an SQL linter, an inventory checker, templates and real-project lessons. Use it whenever an agent builds, refactors, reviews or explains an OutSystems server or service action, entity, aggregate, SQL node, structure, exception, timer, site property, integration or exposed API, even if the user only says "add the save logic", "call this API", "why is it slow" or "clean up the BL".
+description: Build, refactor, review and troubleshoot OutSystems server logic, entities, queries, transactions, integrations and background jobs in O11 or ODC. Includes SQL and inventory checks. Use for backend implementation; verify the platform and installed contracts before applying version-specific guidance.
 license: MIT
 metadata:
   version: 1.2.0
-  updated: 2026-11-22
+  updated: "2026-11-22"
   platform: OutSystems 11 (server side of Reactive Web, Mobile, Traditional Web) and ODC
-  agent-independent: true
+  agent-independent: "true"
   companion-skills: outsystems-architecture (layers, modules, dependencies, rule IDs ARC/HSE/DAT/INT/SEC/PERF...); outsystems-frontend-conventions (screens, blocks, client logic); outsystems-live-style-guide (visual design); outsystems-bpt (processes, task inboxes); outsystems-cmf (case management)
 ---
 
 # OutSystems Backend Conventions
+
+## Scope, evidence and consistency
+
+- Run bundled scripts from the skill directory or use absolute paths; do not assume they exist in the application checkout.
+- Establish O11/ODC, application type, installed component versions and the target environment from available evidence; ask only for information that changes the work.
+- Separate **platform facts**, **house defaults**, **project decisions** and **observed lessons**. Project conventions choose among supported designs; they cannot change runtime behavior. The FE/CW/BL/CS chain is an O11 house pattern, not an ODC requirement.
+- Preserve the user's requested scope and existing authorization. Continue routine reversible work; a skill does not authorize publishing, dependency changes or production operations beyond that scope. Do not introduce phase-by-phase approval unless the user or environment requires it.
+- Prefer installed API signatures and version-matched official documentation. A repository development branch, community workaround or old project observation is evidence to investigate, not a release guarantee.
+- Report evidence separately: **prepared → model validated → merged → published → runtime verified**. A static checker passing proves only its covered checks on the supplied inventory. Unknown, blocked and not tested remain explicit.
+- Read [verification and reliability](references/verification-and-reliability.md) when changing data contracts, concurrent operations, runtime behavior or verification. It contains the concrete acceptance checks and sources for this skill.
+
 
 This skill makes an agent write OutSystems server-side code the way a senior OutSystems tech lead expects to find it in review:
 - **every element in the right layer and module**, named so anyone can find it;
@@ -35,14 +46,9 @@ It works for any agent (Claude, Copilot, Cursor, Codex, Gemini, a custom LLM age
 
 When they overlap, the architecture skill owns *where* an element lives; this skill owns *how* it is written. This skill cites the architecture skill's rule IDs (`DAT-05`, `SEC-09`, `INT-02`…) and adds its own (`BLG-*`, `BTX-*`, `BDA-*`, `BIN-*`, `BER-*`, `BAS-*`, `BPF-*`, `BSC-*`, `BCF-*`, `BNM-*`).
 
-## Precedence of rules
-1. **The project's own conventions** (its AGENTS.md, blueprint or naming document already in force). Follow them, and say so.
-2. **This house standard.**
-3. **OutSystems official guidance** (Architecture Canvas, Platform Best Practices, Code Quality patterns, docs). Community conventions only fill gaps.
+## Applying conventions
 
-Deviations are "comply or explain": record each one as a short decision (ADR) in the project's AGENTS.md or docs, with the reason.
-
-If a project rule conflicts with a **security**, **transaction** or **data-integrity** rule here (`BSC-*`, `BTX-01`, `BDA-04`, `BDA-08`), flag it with the risk and ask. Never silently follow it and never silently rework already-built modules. Record the decision in the project's AGENTS.md.
+Use the project's documented architecture, naming and design choices where supported. Use this skill's house defaults when the project has no decision. Official documentation and installed contracts determine platform behavior; house preferences never override those facts. Record a consequential deviation and its reason. Escalate unresolved security, data-integrity or compatibility conflicts, not ordinary naming or layout choices.
 
 ## The backend on the 3-layer Canvas
 
@@ -98,13 +104,13 @@ No `Action1`, `ServerAction2`, `SQL1`, `Structure1`, `Param1` (`BNM-02`). Every 
 - Business rules live **only** in BL — not in CRUD (except entity invariants), not in IS/API, not in SQL, not on the client (`BLG-06`).
 
 ### 3. Transactions: one use case, one transaction (`references/business-logic.md` §5–7)
-- Every request runs in one transaction that commits at the end, or rolls back on an unhandled exception or an `Abort Transaction` handler.
+- A server request opens database transactions on access. Normal completion commits; an unhandled exception or an aborting handler rolls back the current transaction. Explicit commits, Service Actions, framework calls and external connections introduce boundaries; returning `IsSuccess = False` does not roll back writes.
 - A **Service Action runs in its own transaction**: a sequence of Service Actions is not atomic. Put the steps in one private Server Action behind one Service Action, or design compensation (`BTX-01`, `DAT-05`).
 - `CommitTransaction` only in timers, batches and long processes, documented as `[commit transaction]` (`BTX-02`, `DAT-12`).
-- **Concurrency**: user-edited records use an optimistic check (`UpdatedOn` sent back and compared); counters, sequence numbers and balances use `Get<Entity>ForUpdate` (row lock) (`BTX-04`).
+- **Concurrency**: compare the submitted version and write atomically (a conditional update with affected-row check, or `Get<Entity>ForUpdate` followed by comparison inside the same transaction). A separate unlocked read/compare/write is racy; prefer a monotonic version over timestamp precision (`BTX-04`).
 - **Idempotency**: anything that can be retried — timers, integration calls, Service Actions after a `CommunicationException`, double clicks — is safe to run twice (`BTX-05`).
 - No external call (REST, email, SMS) while holding locks; send after commit or through an outbox (`BTX-06`).
-- **Commit before handing off** to a process, an ODC event, a woken timer or a service that reads what you just wrote: on Oracle/PostgreSQL and in ODC the other side can't see uncommitted rows (`BTX-07`).
+- **Design the handoff boundary**: determine when the receiver runs and what committed data it needs. Keep business writes and an outbox/event intent atomic where supported. If the installed API requires a commit before dispatch, document partial-success recovery; do not insert a blanket commit into every use case (`BTX-07`).
 - There are no distributed transactions: other catalogs, external databases and integrations commit on their own.
 
 ### 4. Data access: bounded, safe, indexed (`references/data-access.md`)
@@ -130,7 +136,7 @@ No `Action1`, `ServerAction2`, `SQL1`, `Structure1`, `Param1` (`BNM-02`). Every 
 - Exposed APIs: `_API` module, authentication + TLS (or Internal Access Only), input validation, per-method exception handling, HTTP status codes, versioned, resource-oriented paths (`BIN-07`, `SEC-12`, `BNM-08`). They are **not secured by default**: prove an unauthenticated call gets 401; one hashed credential per consumer; verified, expiring tokens (`BSC-11`).
 
 ### 6. Errors and logging (`references/errors-and-logging.md`)
-- **Expected business outcomes** the caller must branch on → return `ActionResult` (`IsSuccess`, `Message`, `Errors[] {Field, Code, Message}`), the same shape the frontend skill maps onto forms. **Unexpected failures** → raise exceptions (`BLG-08`, `BER-05`).
+- **Expected business outcomes** the caller must branch on → return `ActionResult` (`IsSuccess`, `Code`, `Message`, `Errors[] {Field, Code, Message}`), the same shape the frontend skill maps onto forms. **Unexpected failures** → raise exceptions (`BLG-08`, `BER-05`).
 - One set of user exceptions per BL module (`ValidationException`, `NotFoundException`, `NotAuthorizedException`, `ConflictException`, `BusinessRuleException`); one `<Concept>IntegrationException` per `_IS` (`BER-01`).
 - Handlers ordered specific → general, `AllExceptions` last, **never empty** (`BER-02`, `DAT-08`).
 - Log **once**, where handled, through the standard logging action: module, action, correlation id, user, masked inputs — never secrets or full personal data (`BER-03`, `SEC-06`).
@@ -167,8 +173,8 @@ No `Action1`, `ServerAction2`, `SQL1`, `Structure1`, `Param1` (`BNM-02`). Every 
    ```
    node scripts/check-backend.mjs <inventory.json> [--style pascal] [--json]
    ```
-6. **Verify on the platform** (`BLL-01`): publish, read the element back, check TrueChange, then exercise happy path, invalid input, missing role, another user's record, double submit, and an integration timeout. Report what you saw, not what you wrote.
-7. Finish with the build report from the architecture skill (`templates/build-report.md` there).
+6. **Verify on the platform** (`BLL-01`): publish when authorized, read the element back, check TrueChange, then exercise happy path, invalid input, missing role, another user's record, double submit, and an integration timeout. Report what you saw, not what you wrote.
+7. Finish with the build report from the architecture skill (`build-report.md` in the architecture skill’s templates directory when installed; otherwise report the evidence stages and remaining work from this skill’s templates).
 
 ### Reviewing
 1. Step 0, then run both scripts on what you can export.

@@ -7,7 +7,7 @@ Copy this file (or the block below) into a project's AGENTS.md so any agent foll
 
 You are writing OutSystems server-side code (O11 or ODC). The full skill is in `outsystems-backend-conventions/`: `SKILL.md` is the entry point, `references/` hold the details, `references/review-checklist.md` defines the rule IDs. Module placement and layering come from the companion `outsystems-architecture` skill.
 
-**Precedence**: project conventions > this house standard > OutSystems official guidance. Security, transaction and data-integrity rules are never relaxed silently: flag and ask.
+**Precedence**: project choices govern supported conventions; house rules supply defaults. Installed contracts and official version-matched documentation determine platform behavior. Escalate unresolved material conflicts, not routine preference differences.
 
 **Layers (3-layer Canvas)**: End-User `_Front_End` (no backend logic) → Core `_CW` (data actions call BL) → `_BL` (Structures, thin public actions, private `_Logic`, validation, transitions, roles, exceptions) → `_CS` (Public + Expose Read-Only entities, CRUD wrappers that set audit columns, no role checks); `_Sync`/`_Eng` timers, `_API` exposed REST → Foundation `_IS` consumed REST/SOAP, `_Lib` helpers. Dependencies point down only.
 
@@ -17,7 +17,7 @@ You are writing OutSystems server-side code (O11 or ODC). The full skill is in `
 - One use case = one transaction. Service Actions run in their own transaction: no multi-step writes across several of them.
 - `CommitTransaction` only in timers/batches, tagged `[commit transaction]`.
 - Optimistic checks for user edits; `Get…ForUpdate` for counters and sequences; unique indexes for "only one".
-- Retryable work is idempotent. No external calls while holding locks: after commit or via an outbox. Commit before launching a process, event or callback that reads your data.
+- Retryable work is idempotent. No external calls while holding locks: after commit or via an outbox. Verify receiver visibility and trigger semantics; document required commits and partial-success recovery instead of inserting blanket early commits.
 - Aggregates first. SQL: `{Entity}.[Attribute]`, parameters, row limit inside the statement, no `SELECT *`, sargable filters, `WHERE` on every `UPDATE`/`DELETE`, `IsDeleted` filtered in every read.
 - External calls only in `<Concept>_IS`: explicit timeouts, normalized structures and exceptions raised in `OnAfterResponse` (never rewrite errors to 200), secrets `Is Secret`, bounded retries for idempotent calls only, logging level Default with redaction.
 - Exposed REST in `_API`: authentication + TLS, per-method exception handling, status codes, `/v1` plural-noun resources. Not secure by default: prove an unauthenticated call returns 401.
@@ -25,4 +25,5 @@ You are writing OutSystems server-side code (O11 or ODC). The full skill is in `
 - Timers: `Timer_` action with its own exception handler, batches, checkpoint + commit, logical timeout + re-wake, kill switch, run log, per-record status, stale-claim recovery; budget for automatic retries.
 - No queries or Service Actions inside loops; no action that only wraps one aggregate. Cache only stable, non-user-specific data (invalidation is module-wide). Site properties read-only at runtime.
 - Verify on the platform before saying "done". Lint SQL with `scripts/lint-sql.mjs`; check inventories with `scripts/check-backend.mjs`.
+- Use `references/verification-and-reliability.md` for evidence and domain acceptance checks. Distinguish prepared, validated, merged, published and runtime verified; preserve task scope and existing authorization.
 <!-- END core rules -->

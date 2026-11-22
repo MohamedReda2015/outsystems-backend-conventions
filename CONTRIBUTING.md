@@ -41,5 +41,11 @@ node scripts/test.mjs           # both scripts against the examples
 1. Bump `metadata.version` in `SKILL.md` and add `## <version> — <date>` to `CHANGELOG.md`.
 2. Merge to `main`, then tag `v<version>` and push the tag. The release workflow re-runs the checks, verifies the tag matches SKILL.md and the changelog, and attaches the packaged zip.
 
+## Reliability review guidance
+
+Use `BRV` for verification and reliability review rules. These are manual acceptance checks unless a script explicitly implements them. Keep platform facts, house conventions and observed project lessons distinct, and link primary sources from `references/verification-and-reliability.md`.
+
+Run repository maintenance checks from a full Git checkout. Release archives intentionally exclude these scripts; installed skill packages still include the runtime validators.
+
 ## Code of conduct
 By participating you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).

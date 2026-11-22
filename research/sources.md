@@ -41,3 +41,8 @@ Where the rules come from, so they can be cited or re-verified. **Official** = O
 
 ## Could not be read (HTTP 403 to automated fetch)
 itnext.io articles on safe timers, heavy timers, concurrency and REST API design; Noesis "Exception handling standards"; "Light processes under the hood" (Medium). Their points appear only where the same advice was confirmed by another source above.
+
+
+## Reliability review — 2026-11-22
+
+See [verification and reliability](../references/verification-and-reliability.md) for primary sources, provenance and acceptance cases. Platform facts are separated from house policy and anonymized project observations. A community mirror is not an official publication; installed contracts and version-matched official sources take precedence. Runtime claims were not retested in a live tenant during this documentation review.
