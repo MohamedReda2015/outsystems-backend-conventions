@@ -107,7 +107,7 @@ Node.js 16+, no packages, no network access. Exit code 1 means at least one erro
 
 **SQL linter**: paste each SQL node's text into a `.sql` file, then:
 ```bash
-node scripts/lint-sql.mjs path/to/sql --soft-delete Request,RequestFile [--expand-inline Ids] [--json]
+node scripts/lint-sql.mjs path/to/sql --soft-delete Request,RequestFile [--expand-inline Ids] [--style] [--json]
 node scripts/lint-sql.mjs scripts/examples/sql-bad --soft-delete Request     # shows each rule firing
 ```
 It flags physical table names, `SELECT *`, unbounded selects, `UPDATE`/`DELETE` without `WHERE`, dynamic SQL, likely Expand Inline `IN`/`ORDER BY` parameters, non-sargable predicates, leading-wildcard `LIKE`, `NOLOCK`, cursors, hard-coded ids and missing `IsDeleted` filters.

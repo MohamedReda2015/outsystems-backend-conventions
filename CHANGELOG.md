@@ -1,20 +1,22 @@
 # Changelog
 
-## Unreleased — cross-skill delivery review (2026-11-22)
+All notable changes to this skill. Rule IDs are stable: new rules get new numbers, retired rules are never reused.
 
+## 1.3.0 — 2026-11-22
+Ideas adopted, after review, from a third-party OutSystems standards collection (maiurnarendra/outsystems-ai-skills, MIT; paraphrased, house rules kept where they differ).
+- New rules: `BLG-11` flow layout and labels, `BLG-12` built-ins and List actions before loops and JavaScript, `BDA-14` static entity ids not auto-number + `IsActive` + keeping Created* on update, `BDA-15` opt-in SQL style, `BIN-12` IS outputs limited to used attributes in real types + review severities, `BAS-10` kill switch per batch, no-progress guard, one-off timers, Effective Schedule.
+- `lint-sql.mjs --style`: opt-in BDA-15 warnings (header comment, uppercase keywords, leading commas, explicit joins, descriptive aliases); new examples `sql-style-good` / `sql-style-bad` and tests.
+- References: business-logic §10, data-access §1/§2/§5, async-processing §2, integrations §1; adapters updated.
+
+### Also in this release: cross-skill delivery review (2026-11-22)
 - Connected requirements, domain implementation and runtime evidence through stable IDs and versioned handoffs.
 - Added domain acceptance guidance, template evidence fields and sourced review checks.
 
-
-## Unreleased — reliability review (2026-11-22)
-
+### Also in this release: reliability review (2026-11-22)
 - Clarified platform facts versus house/project conventions and verification evidence.
 - Added domain-specific reliability guidance, source provenance and acceptance cases.
 - Added review/template checks and corrected over-broad or inconsistent claims.
 - Extended repository consistency checks to the new reliability rule IDs and aligned contributor guidance with the full checkout.
-
-
-All notable changes to this skill. Rule IDs are stable: new rules get new numbers, retired rules are never reused.
 
 ## 1.2.0 — 2026-11-22
 Prepared for public release on GitHub. No rule changes.

@@ -124,6 +124,24 @@ Anything that may run twice must produce the same result:
 - **BLG-09** One rule, one place: extract shared logic to a private action (`MNT-01`) instead of copying flows between Create and Update.
 - Flows top-to-bottom, error branches to the right, labelled Ifs and Assigns, actions under ~40 nodes (`MNT-03`).
 
+### Flow layout and labels (`BLG-11`)
+- The happy path is one straight vertical line from Start to End. **If: True goes down, False goes right**; the False branch ends in its own End or Raise Exception.
+- **For Each: the Cycle connector leaves to the right**; the body runs down on the right and returns above the loop; when the cycle ends the flow continues down.
+- Only vertical and horizontal connectors, no crossings and nothing hidden behind nodes. Route around with empty Assigns labelled `Dummy` at the corners.
+- Guard clauses first, then the work. Beyond ~20 nodes or 3 nested Ifs, use a Switch or extract a private action.
+- Write conditions so True is the expected path. Label every If as a question (`Has attachments?`) or an Is/Has name, every Switch by its subject, every Assign by what it sets. Never leave `If1`, `Assign1`, `Aggregate1`.
+- Through the Service Studio MCP, lay out every new or changed flow before `omlMerge` (the official skill treats layout as a completion gate).
+
+### Built-ins before loops before JavaScript (`BLG-12`)
+Take the first option that does the job:
+1. An expression with built-in functions (`If()`, `Trim`, `AddDays`, `FormatDateTime`, `TextToIntegerValidate`…).
+2. A System list action: `ListAny`, `ListAll`, `ListIndexOf`, `ListFilter`, `ListSort`, `ListDistinct`, `ListAppendAll`.
+3. The aggregate itself: filters, sorts, calculated attributes, Group By, Max. Records.
+4. Flow nodes.
+5. A JavaScript node, client side only, for what the platform can't do (`JSC-*` in the frontend skill).
+
+A For Each is for **doing work** on each item; one that only searches, checks or filters a list is replaced by a list action or an aggregate filter. A choice between two values is `If(condition, a, b)` in one Assign, not an If node with two Assigns.
+
 ## 11. ODC notes
 ODC has no modules: the units are **apps** (Web, Mobile, Workflow, Agentic) and **libraries**. The same intent applies, with these differences (official *ODC for O11 developers*, *Service actions*, *Implement events*, *Use timers*):
 

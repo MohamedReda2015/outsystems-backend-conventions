@@ -3,29 +3,32 @@
 //
 // Usage:
 //   node scripts/lint-sql.mjs <file-or-folder> [more...] [--soft-delete Entity1,Entity2]
-//                             [--expand-inline Param1,Param2] [--json]
+//                             [--expand-inline Param1,Param2] [--style] [--json]
 //
 // Input: one .sql file per SQL node (copy the node text into a file named like the node,
 // e.g. Request_GetOverdueSummary.sql). Folders are scanned recursively for *.sql.
 //   --soft-delete    entities that use IsDeleted; every statement reading them must filter it.
 //   --expand-inline  parameters set to Expand Inline in the node; each is reported so a
 //                    reviewer confirms it is built with BuildSafe_InClause*/EncodeSql/allow-list.
+//   --style          also check the opt-in team SQL style (BDA-15): header comment, uppercase
+//                    keywords, leading commas, explicit joins, descriptive aliases. Warnings only.
 //   --json           machine-readable output.
 // Exit code: 0 = no errors (warnings allowed), 1 = at least one error, 2 = usage error.
 //
 // Rules (see references/review-checklist.md): BDA-03, BDA-04, BDA-05, BDA-06, BDA-07,
-// BDA-08, BDA-09, BDA-12, BDA-13. The checks are text heuristics: they find likely problems,
+// BDA-08, BDA-09, BDA-12, BDA-13; BDA-15 with --style. The checks are text heuristics: they find likely problems,
 // a reviewer confirms them.
 
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, extname } from "node:path";
 
 const args = process.argv.slice(2);
-const opt = { json: false, softDelete: [], expandInline: [] };
+const opt = { json: false, style: false, softDelete: [], expandInline: [] };
 const targets = [];
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
   if (a === "--json") opt.json = true;
+  else if (a === "--style") opt.style = true;
   else if (a === "--soft-delete") opt.softDelete = (args[++i] || "").split(",").map((s) => s.trim()).filter(Boolean);
   else if (a === "--expand-inline") opt.expandInline = (args[++i] || "").split(",").map((s) => s.trim().replace(/^@/, "")).filter(Boolean);
   else if (a === "-h" || a === "--help") { usage(); process.exit(0); }
@@ -78,6 +81,32 @@ function add(file, text, idx, level, rule, msg) {
   findings.push({ file, line: lineOf(text, idx), level, rule, message: msg });
 }
 
+// BDA-15 (opt-in): team SQL style. One finding per kind per file keeps the output short.
+function styleChecks(file, raw, m) {
+  const first = raw.replace(/^\s+/, "");
+  if (!/^(--|\/\*)/.test(first))
+    add(file, m, 0, "warning", "BDA-15", "No header comment: start the node with /* <NodeName>: purpose */.");
+  const lower = /\b(select|from|where|group by|order by|having|inner join|left join|join|and|or|as)\b/.exec(m);
+  if (lower)
+    add(file, m, lower.index, "warning", "BDA-15", `'${lower[1]}' in lowercase: write SQL keywords in UPPERCASE.`);
+  for (const r of m.matchAll(/(\b\w+\s+)?\bJOIN\b/gi)) {
+    if (!/^(INNER|LEFT|RIGHT|FULL|CROSS|OUTER)\s+$/i.test(r[1] || "")) {
+      add(file, m, r.index + (r[1] || "").length, "warning", "BDA-15", "Bare JOIN: write INNER JOIN or LEFT JOIN explicitly.");
+      break;
+    }
+  }
+  const trailing = /,[ \t]*\n/.exec(m);
+  if (trailing)
+    add(file, m, trailing.index, "warning", "BDA-15", "Trailing comma at the end of a line: put commas at the start of the next line.");
+  const KEY = /^(ON|AS|WHERE|SET|INNER|LEFT|RIGHT|FULL|CROSS|JOIN|GROUP|ORDER|WITH|UNION)$/i;
+  for (const r of m.matchAll(/\{\w+\}\s+(?:AS\s+)?([A-Za-z_]\w*)\b/g)) {
+    if (!KEY.test(r[1]) && r[1].length <= 2) {
+      add(file, m, r.index, "warning", "BDA-15", `Alias '${r[1]}' is an abbreviation: use a descriptive CamelCase alias (e.g. Assignee) or none.`);
+      break;
+    }
+  }
+}
+
 const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 for (const file of files) {
@@ -94,6 +123,8 @@ for (const file of files) {
       start = i + 1;
     }
   }
+
+  if (opt.style) styleChecks(file, raw, m);
 
   for (const s of stmts) {
     const t = s.text;

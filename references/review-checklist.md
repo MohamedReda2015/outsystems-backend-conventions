@@ -31,6 +31,8 @@ Every rule has an ID, a severity and a check. Cite the ID in findings. IDs are s
 | BLG-08 | Major | Expected business outcomes returned as `ActionResult` codes; unexpected failures raised as exceptions |
 | BLG-09 | Minor | No duplicated logic between write paths (`MNT-01`) |
 | BLG-10 | Major | Reads return purpose-built Structures; lists paged server-side with a capped `MaxRecords` and `TotalCount`; sort keys allow-listed (`DAT-04`) |
+| BLG-11 | Minor | Flow layout and labels: happy path straight down, If True down / False right, For Each cycle to the right, straight connectors routed with empty `Dummy` Assigns, guard clauses first; no default labels (`If1`, `Assign1`, `Aggregate1`); Ifs labelled as questions or Is/Has names; extract beyond ~20 nodes or 3 nested Ifs; laid out before merge when written through the MCP |
+| BLG-12 | Minor | Built-ins before loops before JavaScript: expression → System list action (`ListAny`, `ListAll`, `ListIndexOf`, `ListFilter`, `ListSort`, `ListDistinct`) → aggregate features → flow nodes; a For Each does work on items, never only searches or filters; two-value choices use `If()` in one Assign |
 
 ## BTX — Transactions, concurrency, idempotency (business-logic.md §5–7)
 | ID | Sev | Rule |
@@ -59,6 +61,8 @@ Every rule has an ID, a severity and a check. Cite the ID in findings. IDs are s
 | BDA-11 | Major | High-volume tables have retention and a batched purge/archive job (`PERF-12`) |
 | BDA-12 | Minor | Static entities for fixed codes, referenced by record name (`DAT-07`) |
 | BDA-13 | Minor | Set-based SQL: no cursors or WHILE loops; no business logic in SQL `[sql]` |
+| BDA-14 | Major | Static entities: `Id` not auto-number, so ids stay identical across environments; records referenced by name; the active flag renamed from Service Studio's `Is_Active` to `IsActive`. Update wrappers keep `CreatedBy/On` (read the stored record when `Source` may not carry them) |
+| BDA-15 | Minor | SQL style, when the team adopts it: clause keywords uppercase at the left margin, leading commas, explicit `INNER/LEFT JOIN` (never a bare `JOIN`), descriptive aliases instead of one-letter ones, a header comment naming the node and purpose `[sql --style]` |
 
 ## BIN — Integrations (integrations.md)
 | ID | Sev | Rule |
@@ -74,6 +78,7 @@ Every rule has an ID, a severity and a check. Cite the ID in findings. IDs are s
 | BIN-09 | Blocker | No calls to URLs built from user input (SSRF); hosts allow-listed |
 | BIN-10 | Minor | Each IS has a mock switch and test overrides that are off/empty in Production |
 | BIN-11 | Major | Consumed REST errors handled in `OnAfterResponse` (error body parsed, specific exception raised); never silenced by rewriting the status code to 2xx |
+| BIN-12 | Major | IS public outputs carry only the attributes the app uses, in real types (dates, numbers, Booleans converted at the boundary); the raw response, JSON text and HTTP status never leave the IS. Review severity: Core or End-User referencing an imported structure or consumed method = **Critical**; unused attributes, text-typed dates/numbers or status-code outputs = **Major** |
 
 ## BER — Errors and logging (errors-and-logging.md)
 | ID | Sev | Rule |
@@ -99,6 +104,7 @@ Every rule has an ID, a severity and a check. Cite the ID in findings. IDs are s
 | BAS-07 | Major | Job budget accounts for automatic retries (O11 default 3, configurable; ODC 3 fixed, worst case 4 × timeout) and timer concurrency (3 per O11 front-end, one instance per timer); stale "In Progress" claims are recovered `[inv]` |
 | BAS-08 | Major | Light BPT only where it fits: launched on entity Create (Expose Process Events, light execution enabled), short idempotent activity; manual launch runs as a regular process |
 | BAS-09 | Major | ODC events: basic-type parameters (ids) within 10 KB, order-independent handlers that finish within 2 min, All Exceptions on producer and consumer, commit before triggering |
+| BAS-10 | Major | Long-running timers: kill switch re-read before every batch; a **no-progress guard** (a batch with no successful record logs an error and ends without re-waking); one-off migrations and backfills as dedicated timers that nothing else references and that are removed once confirmed in every environment; a Service Center Effective Schedule override is documented, because it beats the model's schedule |
 
 ## BPF — Performance (performance-and-caching.md)
 | ID | Sev | Rule |

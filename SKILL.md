@@ -3,7 +3,7 @@ name: outsystems-backend-conventions
 description: Build, refactor, review and troubleshoot OutSystems server logic, entities, queries, transactions, integrations and background jobs in O11 or ODC. Includes SQL and inventory checks. Use for backend implementation; verify the platform and installed contracts before applying version-specific guidance.
 license: MIT
 metadata:
-  version: 1.2.0
+  version: 1.3.0
   updated: "2026-11-22"
   platform: OutSystems 11 (server side of Reactive Web, Mobile, Traditional Web) and ODC
   agent-independent: "true"
@@ -123,7 +123,7 @@ No `Action1`, `ServerAction2`, `SQL1`, `Structure1`, `Param1` (`BNM-02`). Every 
 - `UPDATE`/`DELETE` SQL always has a `WHERE`, and bulk changes are audited as one operation (`BDA-08`).
 - **Lint every SQL node you write**:
   ```
-  node scripts/lint-sql.mjs <file-or-folder> [--soft-delete Request,RequestFile] [--json]
+  node scripts/lint-sql.mjs <file-or-folder> [--soft-delete Request,RequestFile] [--style] [--json]
   ```
 
 ### 5. Integrations: wrap, time out, normalize (`references/integrations.md`)
@@ -212,7 +212,7 @@ Read `references/lessons-learned.md` first. Keep public signatures stable: add a
 | `references/lessons-learned.md` | before any real build or refactor (`BLL-*`) |
 | `references/review-checklist.md` | any review, audit or "is this right?" question |
 | `templates/service-action-spec.md` · `templates/integration-spec.md` · `templates/timer-spec.md` · `templates/backend-review-report.md` | new public action; new integration; new timer; review report |
-| `scripts/lint-sql.mjs` | linting SQL node text (`--soft-delete`, `--json`) |
+| `scripts/lint-sql.mjs` | linting SQL node text (`--soft-delete`, `--style` for the opt-in team SQL style, `--json`) |
 | `scripts/check-backend.mjs` | checking a backend inventory JSON: layers, names, signatures, secrets, timers, APIs, logging levels (`--style`, `--json`) |
 | `research/sources.md` · `research/assessment-2026-11.md` | where a rule comes from (official vs community) and what the November 2026 research changed; re-verify before quoting platform limits |
 

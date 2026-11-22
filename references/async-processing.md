@@ -46,6 +46,10 @@ Facts and rules:
 - Delta processing by timestamp/high-water mark; never "process everything every night" for large tables.
 - Stagger schedules; heavy jobs off-peak; a dedicated timer front-end/zone for heavy loads.
 - One timer per job; the `Timer_` action is called **only** by its timer (`BNM-06`).
+- **Kill switch before every batch, not only at the start** (`BAS-10`): an operator who flips it mid-run stops the job at the next batch.
+- **No-progress guard** (`BAS-10`): if a batch ends with no record processed successfully, log an error, mark the run `Failed` and end **without** re-waking. Otherwise a systemic failure (expired credentials, a broken mapping) re-wakes the timer forever.
+- **One-off jobs** (data migrations, fixes, backfills) are dedicated timers that nothing else references, are run per environment, and are deleted together with any references only they used once the result is confirmed everywhere.
+- **Effective Schedule**: Service Center can override a timer's schedule per environment; the override wins over the model. Note it in the deployment notes (`OPS-05`) so a later publish doesn't surprise anyone.
 - Timers live in Core (`_Sync`, `_Eng`, or the owning `_BL`/`_CS`), never in FE/CW (`BAS-06`).
 
 ## 3. Per-record processing (`BAS-02`)

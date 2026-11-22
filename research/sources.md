@@ -39,6 +39,8 @@ Where the rules come from, so they can be cited or re-verified. **Official** = O
 | OutSystems forum: Light BPT threads (41063, 88217, 69635) and book *Rapid Application Development with OutSystems* | 20 Light BPT / 10 BPT / 3 timer threads per front-end by default; light activity timeout reported ~3 min vs 5 min for BPT automatic activities (2019, unverified) — BAS-08 |
 | OutSystems forum 82832 | No FeedbackMessage in server actions: the caller may not be a UI — BER-07 |
 
+| maiurnarendra/outsystems-ai-skills v0.14.1 (GitHub, MIT, reviewed 2026-11-22): action-flows, crud-conventions, advanced-sql, integrations, timers | Flow layout and label conventions, built-ins before loops, static-entity ids and `Is_Active`, GetForUpdate output path, SQL style, IS output minimalism and review severities, no-progress guard, one-off timers, Effective Schedule — BLG-11, BLG-12, BDA-14, BDA-15, BIN-12, BAS-10 (paraphrased; house rules kept where they differ, e.g. IS per business concept) |
+
 ## Could not be read (HTTP 403 to automated fetch)
 itnext.io articles on safe timers, heavy timers, concurrency and REST API design; Noesis "Exception handling standards"; "Light processes under the hood" (Medium). Their points appear only where the same advice was confirmed by another source above.
 

@@ -21,6 +21,7 @@ Rules: `BDA-01` … `BDA-13`. Builds on the architecture skill's `DAT-01`…`DAT
 - [ ] Audit columns `CreatedBy`, `CreatedOn`, `UpdatedBy`, `UpdatedOn`; `IsDeleted` (+ `DeletedBy/On`) if soft delete; `Version` integer if optimistic locking without `UpdatedOn`.
 - [ ] **Indexes** on attributes used in filters, sorts and joins; **unique** indexes on natural keys (`Code`, `ExternalId`, `Email`). Composite indexes ordered by selectivity, matching the query's filter (`PERF-01`).
 - [ ] Fixed lists are **static entities** in `Lookups`, referenced by record name (`Entities.RequestStatus.Submitted`), never by literal id (`DAT-07`).
+- [ ] Static entity `Id` is **not auto-number**, so every environment has the same ids for the same records (`BDA-14`). Rename Service Studio's default `Is_Active` to `IsActive`.
 - [ ] Money: Decimal with explicit precision (e.g. 37,8 default is fine; store currency code alongside). Dates: Date Time in **UTC** on the server, convert for display.
 - [ ] No entity with hundreds of attributes; split by usage (summary vs detail vs content).
 - [ ] Multi-tenant flag set deliberately (`SEC-05`).
@@ -39,6 +40,7 @@ Request_Delete(RequestId)       soft: IsDeleted = True, DeletedBy/On; hard only 
 - Actor: `GetUserId()` for platform users; an explicit actor text (e.g. `IDP:<externalId>`) for external users with no platform user; `SYSTEM:<Job>` for timers.
 - Wrappers do **not** check roles (they are called only by BL, timers and processes — never from client logic).
 - `Update` loads the stored record first only when it must preserve columns the caller doesn't own; otherwise BL passes a full, server-loaded record.
+- Keeping `CreatedBy/On` on update (`BDA-14`): when `Source` may not carry them, read the record with `Get<Entity>ForUpdate` and copy them across. Its output is reached through the entity name — `GetRequestForUpdate.Record.Request.CreatedOn`, not `GetRequestForUpdate.Record.CreatedOn` (Service Studio reports "Can't identify 'CreatedOn' element").
 
 ## 3. Soft delete (`BDA-06`, `DAT-03`)
 - `<Entity>_Delete` sets `IsDeleted`. Physical deletes only for owned child rows and purges.
@@ -82,6 +84,24 @@ Rules:
 - Comment the purpose on top; indent; one SQL node per purpose; name it like an action (`GetOverdueSummary`).
 - Database-specific syntax is a portability decision — note the engine in the comment.
 - Lint: `node scripts/lint-sql.mjs <folder> --soft-delete Request,RequestFile`.
+
+### SQL style (`BDA-15`, opt-in)
+Teams that want one reading order for every SQL node can adopt this style and check it with `node scripts/lint-sql.mjs <folder> --style`:
+```sql
+/* Request_GetOverdueByAssignee: overdue requests per assignee */
+SELECT
+	{Request}.[AssignedToUserId]
+	,COUNT(1) AS OverdueCount
+FROM
+	{Request}
+	INNER JOIN {User} AS Assignee ON Assignee.[Id] = {Request}.[AssignedToUserId]
+WHERE
+	{Request}.[IsDeleted] = 0
+	AND {Request}.[DueOn] < @Now
+GROUP BY
+	{Request}.[AssignedToUserId]
+```
+Clause keywords uppercase at the left margin, contents indented, **leading commas** (a missing comma is visible), `AND`/`OR` on the left, explicit `INNER JOIN`/`LEFT JOIN`, aliases only when needed and then descriptive (`Assignee`, not `u`), and a header comment. It is a team choice: record it in AGENTS.md before enforcing it.
 
 ## 6. Bulk operations (`BDA-08`)
 - Bulk `UPDATE`/`DELETE` SQL always has a `WHERE` and is bounded (process in batches of e.g. 1 000–5 000 rows in timers to avoid lock escalation and timeouts).

@@ -45,5 +45,12 @@ expect("sql-bad: exit 1", r.code === 1);
 expect("sql-bad: error rules", same(rules(r.out, "error"), sqlErr), rules(r.out, "error").join(","));
 expect("sql-bad: warning rules", same(rules(r.out, "warning"), sqlWarn), rules(r.out, "warning").join(","));
 
+r = run("lint-sql.mjs", [ex("sql-style-bad"), "--style"]);
+expect("sql-style-bad --style: BDA-15 warnings, exit 0", r.code === 0 && r.out.findings.filter((f) => f.rule === "BDA-15").length === 5, JSON.stringify(rules(r.out)));
+r = run("lint-sql.mjs", [ex("sql-style-good"), "--style", "--soft-delete", "Request"]);
+expect("sql-style-good --style: no findings", r.code === 0 && r.out.findings.length === 0, JSON.stringify(r.out.findings));
+r = run("lint-sql.mjs", [ex("sql-style-bad")]);
+expect("style checks are opt-in (no BDA-15 without --style)", !rules(r.out).includes("BDA-15"));
+
 console.log(failed ? `\n${failed} test(s) failed.` : "\nAll tests passed.");
 process.exit(failed ? 1 : 0);

@@ -26,6 +26,8 @@ external system
 - One `_IS` **per business concept** (`Customer_IS`), not per system; a concept spread across systems can be merged here, and a system serving many concepts is split across several IS modules.
 - The consumed REST/SOAP definitions are **private** inside the `_IS`; only the wrapper actions and normalized Structures are public (`INT-02`).
 - No business rules in `_IS` or `_API` (`INT-04`): no "if VIP then…", no status transitions.
+- **Only what the app needs leaves the IS** (`BIN-12`): if the API returns 30 fields and the app uses 4, the public structure has 4 attributes, in real types (text dates → Date Time, numeric text → Integer/Decimal, "Y"/"N" → Boolean). The raw response, JSON text and HTTP status codes never appear in a public output. When the app later needs a field, add it to the structure and map it; never switch the output to the imported structure "to get everything".
+- Review severities (`BIN-12`): Core or End-User referencing an imported structure or a consumed method directly is **Critical**; unused attributes, text-typed dates or numbers, or status-code / `Success`+`ErrorMessage` outputs are **Major**.
 
 ## 2. The wrapper canvas (`INT-03`)
 Each public `_IS` action (`Customer_IS_GetProfile`) does, in order:
