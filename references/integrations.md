@@ -113,6 +113,9 @@ The business transaction never fails because the provider is down, and nothing i
 - **Resource design (`BNM-08`)**: plural nouns and no verbs in paths (`/v1/requests`, `/v1/requests/{id}`); HTTP verbs for actions on them; the version first and mandatory; filters in the query string; `limit` and `offset` for paging; a small set of status codes (200, 201, 400, 401, 403, 404, 409, 500); one structured error body.
 - Document the API (OutSystems generates OpenAPI): descriptions on every method, parameter and attribute.
 
+## 9b. Exposing logic to AI agents (`BSC-12`)
+An app can serve **MCP tools** to outside AI agents — built in-house or with a Forge component (a community "MCP Server" component exists for O11; it is not an OutSystems product). Each tool is an exposed API: put it in an `_API`-level module that only calls BL, authenticate the client, authorize per tool **and per record** on the server (the agent acts with a user's rights), validate inputs as strictly as any public endpoint, rate-limit, and audit every call with the acting user. Start with a small set of read tools; writes use the same use-case actions as any client. Not to be confused with the Service Studio MCP, which edits modules at design time.
+
 ## 10. SOAP, files, email and SMS
 - SOAP: same canvas; map SOAP faults in the IS; never expose generated SOAP structures.
 - Files from external systems: validate type and size, virus-scan, store in an extension entity or object storage (keep only the reference on the main entity).

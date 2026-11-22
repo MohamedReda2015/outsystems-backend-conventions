@@ -64,8 +64,8 @@ const known = new Set([...defined, ...lessons]);
 
 // Rule IDs defined by the companion outsystems-architecture skill (v2.0.0).
 const ARCH = {
-  ARC: [1, 14], HSE: [1, 6], DAT: [1, 12], INT: [1, 6], UI: [1, 8], SEC: [1, 14],
-  AUD: [1, 3], MNT: [1, 8], OPS: [1, 7], TST: [1, 4],
+  ARC: [1, 14], HSE: [1, 6], DAT: [1, 12], INT: [1, 7], UI: [1, 8], SEC: [1, 14],
+  AUD: [1, 3], MNT: [1, 9], OPS: [1, 10], TST: [1, 4],
 };
 const archPerf = new Set([1, 4, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]);
 for (const [p, [a, b]] of Object.entries(ARCH)) for (let i = a; i <= b; i++) known.add(`${p}-${String(i).padStart(2, "0")}`);

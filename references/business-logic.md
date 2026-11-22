@@ -142,6 +142,9 @@ Take the first option that does the job:
 
 A For Each is for **doing work** on each item; one that only searches, checks or filters a list is replaced by a list action or an aggregate filter. A choice between two values is `If(condition, a, b)` in one Assign, not an If node with two Assigns.
 
+## 10b. After Convert to Reactive (`BLG-13`)
+Service Studio's GA **Convert to Reactive** clones a Traditional module and converts it. Server code that ran inside screen preparations becomes BL read actions called by data actions, and server actions the Reactive UI now calls become REST endpoints: give each the authorize → validate → `_Logic` → map shape of a public BL entry point (`BLG-01`, `BSC-01`), and move any business rule the Traditional screen enforced on the server into BL.
+
 ## 11. ODC notes
 ODC has no modules: the units are **apps** (Web, Mobile, Workflow, Agentic) and **libraries**. The same intent applies, with these differences (official *ODC for O11 developers*, *Service actions*, *Implement events*, *Use timers*):
 

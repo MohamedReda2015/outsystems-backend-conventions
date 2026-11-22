@@ -33,6 +33,7 @@ Every rule has an ID, a severity and a check. Cite the ID in findings. IDs are s
 | BLG-10 | Major | Reads return purpose-built Structures; lists paged server-side with a capped `MaxRecords` and `TotalCount`; sort keys allow-listed (`DAT-04`) |
 | BLG-11 | Minor | Flow layout and labels: happy path straight down, If True down / False right, For Each cycle to the right, straight connectors routed with empty `Dummy` Assigns, guard clauses first; no default labels (`If1`, `Assign1`, `Aggregate1`); Ifs labelled as questions or Is/Has names; extract beyond ~20 nodes or 3 nested Ifs; laid out before merge when written through the MCP |
 | BLG-12 | Minor | Built-ins before loops before JavaScript: expression → System list action (`ListAny`, `ListAll`, `ListIndexOf`, `ListFilter`, `ListSort`, `ListDistinct`) → aggregate features → flow nodes; a For Each does work on items, never only searches or filters; two-value choices use `If()` in one Assign |
+| BLG-13 | Major | After **Convert to Reactive**, screen preparations become BL read actions behind data actions, and every server action the Reactive UI now calls gets the authorize → validate step of a public BL entry point (`BSC-01`) |
 
 ## BTX — Transactions, concurrency, idempotency (business-logic.md §5–7)
 | ID | Sev | Rule |
@@ -133,6 +134,7 @@ Every rule has an ID, a severity and a check. Cite the ID in findings. IDs are s
 | BSC-09 | Blocker | Tenant never from input; no `TenantSwitch`/Show Tenant Identifier outside approved admin apps (`SEC-05`) |
 | BSC-10 | Major | Output Structures expose only what the caller may see |
 | BSC-11 | Blocker | Exposed APIs verified: an unauthenticated call returns 401; credentials per consumer, stored hashed; tokens expire; JWT signatures verified on every call `[inv]` |
+| BSC-12 | Major | Business logic exposed to outside AI agents as MCP tools (in-house or via a Forge component) is an exposed API: `_API`-level module calling BL only, client authentication, per-tool **and** per-record authorization on the server, input validation, rate limits and per-call audit; third-party components reviewed before production |
 
 ## BCF — Configuration (performance-and-caching.md §4)
 | ID | Sev | Rule |
