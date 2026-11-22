@@ -1,0 +1,164 @@
+{
+  "namingStyle": "underscore",
+  "modules": [
+    {
+      "name": "Request_CS",
+      "entities": [
+        {
+          "name": "Request",
+          "public": true,
+          "exposeReadOnly": false,
+          "softDelete": true,
+          "attributes": [
+            {
+              "name": "Id"
+            },
+            {
+              "name": "Status",
+              "type": "RequestStatus Identifier"
+            },
+            {
+              "name": "Title"
+            }
+          ]
+        }
+      ],
+      "structures": [
+        {
+          "name": "RequestDto",
+          "public": true
+        }
+      ],
+      "actions": [
+        {
+          "name": "Request_Save",
+          "kind": "service",
+          "public": true,
+          "description": "Saves.",
+          "inputs": [
+            {
+              "name": "CreatedBy",
+              "type": "Text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Request_BL",
+      "actions": [
+        {
+          "name": "SubmitRequest",
+          "kind": "service",
+          "public": true,
+          "description": "",
+          "nodeCount": 48,
+          "commitsTransaction": true,
+          "inputs": [
+            {
+              "name": "UserId",
+              "type": "User Identifier"
+            },
+            {
+              "name": "Request",
+              "type": "Request Record"
+            },
+            {
+              "name": "Param1",
+              "type": "Text"
+            }
+          ]
+        },
+        {
+          "name": "Request_Submit_Logic",
+          "kind": "server",
+          "public": true,
+          "description": "Logic."
+        },
+        {
+          "name": "Action1",
+          "kind": "server",
+          "public": false
+        },
+        {
+          "name": "Request_GetAll",
+          "kind": "server",
+          "public": true,
+          "description": "Returns all requests.",
+          "aggregateOnly": true
+        },
+        {
+          "name": "Timer_Purge",
+          "kind": "server",
+          "public": false,
+          "description": "Purge.",
+          "hasExceptionHandler": false
+        }
+      ],
+      "siteProperties": [
+        {
+          "name": "CrmApiKey",
+          "isSecret": false
+        }
+      ],
+      "consumedRest": [
+        {
+          "name": "CrmApi",
+          "methods": [
+            {
+              "name": "GetCustomer"
+            },
+            {
+              "name": "Export",
+              "timeoutSeconds": 120
+            }
+          ],
+          "loggingLevel": "Full"
+        }
+      ]
+    },
+    {
+      "name": "Request_Front_End",
+      "entities": [
+        {
+          "name": "TempData",
+          "public": false
+        }
+      ],
+      "timers": [
+        {
+          "name": "Cleanup",
+          "action": "CleanupJob",
+          "timeoutMinutes": 60,
+          "schedule": "every 5 min"
+        },
+        {
+          "name": "JobA",
+          "action": "Timer_JobA",
+          "timeoutMinutes": 20,
+          "schedule": "every 5 min"
+        },
+        {
+          "name": "JobB",
+          "action": "Timer_JobB",
+          "timeoutMinutes": 20,
+          "schedule": "every 5 min"
+        },
+        {
+          "name": "JobC",
+          "action": "Timer_JobC",
+          "timeoutMinutes": 20,
+          "schedule": "every 5 min"
+        }
+      ],
+      "exposedRest": [
+        {
+          "name": "Open",
+          "authentication": "None",
+          "internalAccessOnly": false,
+          "requireHttps": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+name: Bug / inaccuracy
+description: A rule is wrong or outdated, or a script misbehaves
+labels: ["bug"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Where
+      description: File and rule ID (e.g. references/integrations.md, BIN-11) or script name.
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong
+      description: What it says now, what it should say, and the platform (O11 Platform Server version, or ODC) if relevant.
+    validations:
+      required: true
+  - type: input
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Link to official documentation, a product update, or a reproducible example.
+  - type: textarea
+    id: repro
+    attributes:
+      label: Script reproduction (if a script bug)
+      description: The input (inventory JSON or SQL text, with neutral names), the command and the output.
+      render: shell

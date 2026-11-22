@@ -1,0 +1,53 @@
+{
+  "skill_name": "outsystems-backend-conventions",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "In my OutSystems Reactive app, the Submit button calls three Service Actions in a row from the client: Request_UpdateStatus, RequestHistory_Create and Notification_Send. Sometimes the request ends up Submitted with no history. How should I restructure this?",
+      "expected_output": "Explains Service Actions run in their own transactions and that several client server calls are not atomic; proposes one client-called server action → one thin BL Request_Submit (authorize, validate) → private Request_Submit_Logic doing status + history in one transaction, notification via outbox after commit; cites BTX-01, BTX-06, PERF-15.",
+      "expectations": [
+        "States that each Service Action commits in its own transaction",
+        "Proposes a single public BL action calling a private _Logic Server Action",
+        "Moves the notification out of the transaction (outbox or after commit)",
+        "Mentions server-side role and ownership checks",
+        "Cites at least one rule ID from the skill"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review this OutSystems SQL node: SELECT * FROM {Request} WHERE UPPER({Request}.[Title]) LIKE '%' + @Search + '%' AND {Request}.[StatusId] IN (@Statuses) ORDER BY @Sort",
+      "expected_output": "Flags SELECT *, no row limit, non-sargable UPPER on column, leading wildcard, likely Expand Inline IN list (BuildSafe_InClauseIntegerList) and ORDER BY (allow-list), missing IsDeleted if soft delete; gives a corrected query.",
+      "expectations": [
+        "Flags SELECT * and the missing row limit",
+        "Flags UPPER() on the column as non-sargable",
+        "Recommends BuildSafe_InClauseIntegerList or similar for the IN list",
+        "Recommends an allow-list for the dynamic sort",
+        "Provides a corrected SQL using {Entity}.[Attribute] syntax"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I need to call a partner's REST API from OutSystems to create shipments when an order is approved. The partner is sometimes slow. Where do I put the code and how do I make it reliable?",
+      "expected_output": "Shipment_IS wrapper (wrapper canvas, normalized structures, explicit timeout, Is Secret credentials, OnAfterResponse error mapping), BL orchestration, outbox row written in Order_Approve transaction, timer sends with retries/backoff/dead letter and idempotency key, logging without payload PII.",
+      "expectations": [
+        "Places the REST consumption in a <Concept>_IS module, not BL or the UI",
+        "Sets an explicit timeout",
+        "Uses an outbox and timer instead of calling during the approval transaction",
+        "Addresses idempotency or duplicate shipments on retry",
+        "Keeps secrets in Is Secret site properties or shared config"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write the spec for a nightly OutSystems timer that syncs 2 million customer records from the ERP.",
+      "expected_output": "Filled timer spec: Customer_Sync module, Timer_SyncCustomers, delta by timestamp, batches, checkpoint + commit, logical timeout below 20 min with re-wake, kill switch, run log, per-record status and dead letter, idempotent upsert by external id, off-peak schedule.",
+      "expectations": [
+        "Uses delta sync rather than a full reload",
+        "Includes batches, checkpoint, CommitTransaction per batch and re-wake",
+        "Includes a kill switch and run log",
+        "Makes the upsert idempotent by external id",
+        "Places the timer in a Core module such as _Sync"
+      ]
+    }
+  ]
+}

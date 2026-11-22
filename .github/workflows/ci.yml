@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Skill consistency (frontmatter, links, rule IDs, hygiene)
+        run: node scripts/check_skill.mjs
+
+      - name: Script regression tests
+        run: node scripts/test.mjs
+
+      - name: Good examples are clean
+        run: |
+          node scripts/check-backend.mjs scripts/examples/inventory-good.json
+          node scripts/lint-sql.mjs scripts/examples/sql-good --soft-delete Request,RequestFile
+
+      - name: Evals file is valid JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('evals/evals.json','utf8'))"
+
+      - name: Package the skill (smoke test)
+        run: |
+          git archive --format=zip --prefix=outsystems-backend-conventions/ -o outsystems-backend-conventions.zip HEAD
+          unzip -l outsystems-backend-conventions.zip | grep -q "outsystems-backend-conventions/SKILL.md"
+          ! unzip -l outsystems-backend-conventions.zip | grep -q "\.github/"

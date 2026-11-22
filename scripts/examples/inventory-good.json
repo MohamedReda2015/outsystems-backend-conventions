@@ -1,0 +1,262 @@
+{
+  "namingStyle": "underscore",
+  "modules": [
+    {
+      "name": "Request_CS",
+      "entities": [
+        {
+          "name": "Request",
+          "public": true,
+          "exposeReadOnly": true,
+          "softDelete": true,
+          "attributes": [
+            {
+              "name": "Id",
+              "type": "Long Integer"
+            },
+            {
+              "name": "Title",
+              "type": "Text"
+            },
+            {
+              "name": "StatusId",
+              "type": "RequestStatus Identifier"
+            },
+            {
+              "name": "OwnerUserId",
+              "type": "User Identifier"
+            },
+            {
+              "name": "IsDeleted",
+              "type": "Boolean"
+            },
+            {
+              "name": "CreatedBy",
+              "type": "User Identifier"
+            },
+            {
+              "name": "CreatedOn",
+              "type": "Date Time"
+            },
+            {
+              "name": "UpdatedBy",
+              "type": "User Identifier"
+            },
+            {
+              "name": "UpdatedOn",
+              "type": "Date Time"
+            }
+          ]
+        },
+        {
+          "name": "RequestStatus",
+          "public": true,
+          "isStatic": true,
+          "attributes": [
+            {
+              "name": "Id"
+            },
+            {
+              "name": "Label"
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "name": "Request_Create",
+          "kind": "server",
+          "public": true,
+          "folder": "CRUD/Request",
+          "description": "Creates a request and sets the audit columns. Called only by BL, timers and processes.",
+          "inputs": [
+            {
+              "name": "Source",
+              "type": "Request Record",
+              "mandatory": true
+            }
+          ]
+        },
+        {
+          "name": "Request_Update",
+          "kind": "server",
+          "public": true,
+          "folder": "CRUD/Request",
+          "description": "Updates a request and sets UpdatedBy/On.",
+          "inputs": [
+            {
+              "name": "Source",
+              "type": "Request Record",
+              "mandatory": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Request_BL",
+      "structures": [
+        {
+          "name": "RequestSummary",
+          "public": true
+        },
+        {
+          "name": "RequestSubmitInput",
+          "public": true
+        },
+        {
+          "name": "ActionResult",
+          "public": true
+        }
+      ],
+      "actions": [
+        {
+          "name": "Request_Submit",
+          "kind": "service",
+          "public": true,
+          "folder": "ServiceActions/Request",
+          "description": "Submits a draft request owned by the current user. Role RequestClerk. Returns ActionResult codes: REQ_NOT_DRAFT.",
+          "nodeCount": 9,
+          "calls": [
+            "Request_ValidateSubmit",
+            "Request_Submit_Logic"
+          ],
+          "inputs": [
+            {
+              "name": "RequestId",
+              "type": "Request Identifier",
+              "mandatory": true
+            },
+            {
+              "name": "Comment",
+              "type": "Text"
+            }
+          ]
+        },
+        {
+          "name": "Request_Submit_Logic",
+          "kind": "server",
+          "public": false,
+          "folder": "PrivateActions/Request",
+          "nodeCount": 22
+        },
+        {
+          "name": "Request_GetList",
+          "kind": "service",
+          "public": true,
+          "folder": "ServiceActions/Request",
+          "description": "Returns a page of the current user's requests.",
+          "inputs": [
+            {
+              "name": "StartIndex",
+              "type": "Integer"
+            },
+            {
+              "name": "MaxRecords",
+              "type": "Integer"
+            }
+          ],
+          "returnsStructure": true
+        }
+      ],
+      "siteProperties": [
+        {
+          "name": "RequestExpiryDays",
+          "isSecret": false,
+          "description": "Days before a draft expires."
+        }
+      ]
+    },
+    {
+      "name": "Customer_IS",
+      "structures": [
+        {
+          "name": "Customer_IS_Profile",
+          "public": true
+        }
+      ],
+      "actions": [
+        {
+          "name": "Customer_IS_GetProfile",
+          "kind": "server",
+          "public": true,
+          "folder": "Wrappers",
+          "description": "Gets the customer profile from the CRM. Raises CustomerIntegrationException.",
+          "inputs": [
+            {
+              "name": "CustomerId",
+              "type": "Text",
+              "mandatory": true
+            }
+          ]
+        }
+      ],
+      "siteProperties": [
+        {
+          "name": "CrmClientSecret",
+          "isSecret": true,
+          "description": "OAuth client secret for the CRM."
+        },
+        {
+          "name": "CrmTimeoutSeconds",
+          "isSecret": false,
+          "description": "Timeout for CRM calls."
+        }
+      ],
+      "consumedRest": [
+        {
+          "name": "CrmApi",
+          "methods": [
+            {
+              "name": "GetCustomer",
+              "timeoutSeconds": 10
+            }
+          ],
+          "loggingLevel": "Default"
+        }
+      ]
+    },
+    {
+      "name": "Customer_Sync",
+      "actions": [
+        {
+          "name": "Timer_SyncCustomers",
+          "kind": "server",
+          "public": false,
+          "folder": "Timers",
+          "description": "Delta sync of customers in batches. [commit transaction]",
+          "commitsTransaction": true,
+          "nodeCount": 30,
+          "hasExceptionHandler": true
+        }
+      ],
+      "timers": [
+        {
+          "name": "SyncCustomers",
+          "action": "Timer_SyncCustomers",
+          "timeoutMinutes": 20,
+          "schedule": "02:00 daily"
+        }
+      ],
+      "siteProperties": [
+        {
+          "name": "SyncCustomersIsEnabled",
+          "isSecret": false,
+          "description": "Kill switch."
+        }
+      ]
+    },
+    {
+      "name": "Request_API",
+      "exposedRest": [
+        {
+          "name": "RequestAPI_v1",
+          "authentication": "Custom",
+          "internalAccessOnly": false,
+          "requireHttps": true,
+          "testedUnauthenticated": true
+        }
+      ]
+    }
+  ]
+}
