@@ -155,3 +155,10 @@ These manual checks complement, rather than extend the claimed coverage of, the 
 | BRV-02 | Major | Scope idempotency keys and recover ambiguous outcomes/outbox delivery without claiming exactly once. |
 | BRV-03 | Major | Map durable boundaries and rollback semantics; a failure result alone does not undo writes. |
 | BRV-04 | Major | Verify tenant/record authorization, temporal IDs, deterministic paging and safe dynamic SQL. |
+
+## Cross-skill acceptance
+
+| ID | Severity | Rule | Check |
+|---|---|---|---|
+| BRV-05 | Major | Document output grain, historical identity, null meaning and authorization before implementing queries. | Manual; verification-and-reliability reference. |
+| BRV-06 | Major | Link component/API evidence to versioned input/output/error contracts and real dependency behavior. | Manual; verify against the story acceptance cases. |

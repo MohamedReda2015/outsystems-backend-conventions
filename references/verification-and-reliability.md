@@ -53,3 +53,11 @@ Test an unauthorized role and another tenant/owner; two simultaneous writes; rep
 - [Handling transactions](https://github.com/OutSystems/docs-product/blob/master/src/ref/data/database/handling-transactions.md) and [Service Actions](https://success.outsystems.com/documentation/11/building_apps/reusing_and_refactoring/use_services_to_expose_functionality/): platform transaction boundaries; reliability designs above are engineering consequences, not additional platform guarantees.
 - [Dynamic SQL guidance](https://success.outsystems.com/documentation/11/building_apps/data_management/data_operations/best_practices_for_building_dynamic_sql_statements/) and [SQL Injection Warning](https://success.outsystems.com/Documentation/11/Reference/Errors_and_Warnings/Warnings/SQL_Injection_Warning/).
 - Anonymized prior-project evidence reviewed 2026-11-22: request-snapshot identity confusion, incomplete imported entity attributes, current-assignee filtering and required-comment validation. Preserve these checks without copying domain names or production data.
+
+### Requirement-to-query and command contracts
+
+Before writing a query, record each output's owner, business grain, source identifier, effective/as-of time, null meaning and access rule. A current master row and an application-time snapshot are different contracts; keep the historical foreign-key path when the requirement concerns the original application. Read complete attribute definitions and joins before replacing a mock provider with live data.
+
+Return unknown/unavailable separately from a genuine zero amount or empty authorized result. Apply authorization before aggregation and export, and test records belonging to another user/group as well as the happy path. Define stable sorting and filter/date boundaries in the output contract so frontend paging and totals use the same rules.
+
+Map command results to the UI's shared result codes and to observable durable outcomes. The test plan should cover stale version, duplicate command and unknown external outcome without losing their distinctions. Link component/API evidence to the story criterion and application version; a generated action existing in the model is not proof that its real dependencies work.

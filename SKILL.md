@@ -215,3 +215,5 @@ Read `references/lessons-learned.md` first. Keep public signatures stable: add a
 | `scripts/lint-sql.mjs` | linting SQL node text (`--soft-delete`, `--json`) |
 | `scripts/check-backend.mjs` | checking a backend inventory JSON: layers, names, signatures, secrets, timers, APIs, logging levels (`--style`, `--json`) |
 | `research/sources.md` · `research/assessment-2026-11.md` | where a rule comes from (official vs community) and what the November 2026 research changed; re-verify before quoting platform limits |
+
+For requirement-to-runtime handoffs, also use the cross-skill acceptance section in [verification and reliability](references/verification-and-reliability.md); preserve source/story/criterion IDs and the tested application version.
